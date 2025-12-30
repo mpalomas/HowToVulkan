@@ -234,7 +234,7 @@ _deps/**
 
 imgui.ini
 
-!assets/*.obj
+!source/assets/*.obj
 
 tutorial/site/**
 tutorial/.cache/**
