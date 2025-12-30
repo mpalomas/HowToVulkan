@@ -44,7 +44,7 @@ Copyright &copy; 2025-2026, <a href="https://www.saschawillems.de">Sascha Willem
 [project.theme]
 
 logo = "images/logo.png"
-# custom_dir = "overrides"
+custom_dir = "overrides"
 
 # change this to "classic" to use the traditional Material for MkDocs look.
 # variant = "classic"
@@ -230,8 +230,17 @@ toggle.name = "Switch to light mode"
 #code = "Jetbrains Mono"
 
 [[project.extra.social]]
+icon = "fontawesome/brands/bluesky"
+link = "https://bsky.app/profile/saschawillems.bsky.social"
+
+[[project.extra.social]]
+icon = "fontawesome/brands/x-twitter"
+link = "https://x.com/SaschaWillems2"
+
+[[project.extra.social]]
 icon = "fontawesome/brands/github"
 link = "https://github.com/SaschaWillems/HowToVulkan"
+
 
 [project.markdown_extensions.pymdownx.highlight]
 # auto_title = true
