@@ -89,7 +89,7 @@ Validation layers can be enabled in code, but the easier option is to enable the
 
 ## Source
 
-Now that everything is properly set up we can start digging into the code. The following chapters will walk you through the [main source file](https://github.com/SaschaWillems/HowToVulkan/blob/main/src/main.cpp) from top to bottom. Some of the less interesting boilerplate like variable declaration are omitted is omitted from this document.
+Now that everything is properly set up we can start digging into the code. The following chapters will walk you through the [main source file](https://github.com/SaschaWillems/HowToVulkan/blob/main/src/main.cpp) from top to bottom. Some of the less interesting boilerplate, like variable declarations, are omitted from this document.
 
 ## Instance setup
 
