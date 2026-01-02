@@ -93,7 +93,7 @@ This will write a Visual Studio 2022 solution file to the `build` folder. As an 
 
 ## Source
 
-Now that everything is properly set up we can start digging into the code. The following chapters will walk you through the [main source file](https://github.com/SaschaWillems/HowToVulkan/blob/main/src/main.cpp) from top to bottom. Some of the less interesting boilerplate, like variable declarations, are omitted from this document.
+Now that everything is properly set up we can start digging into the code. The following chapters will walk you through the [main source file](https://github.com/SaschaWillems/HowToVulkan/blob/main/source/main.cpp) from top to bottom. Some of the less interesting boilerplate, like variable declarations, are omitted from this document.
 
 ## Instance setup
 
