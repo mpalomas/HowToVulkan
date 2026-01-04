@@ -631,7 +631,7 @@ for (auto& semaphore : renderSemaphores) {
 }
 ```
 
-There aren't a lot of options for creating these objects. Fences will be created in a signalled state by setting the `VK_FENCE_CREATE_SIGNALED_BIT` flag. Otherwise the first wait for such a fence would run into a timeout. We need one fence per [frame-in-flight](#cpu-and-gpu-parallelism) to sync between GPU and CPU. Same for the semaphore used to signal presentation. The no. of semaphores used to signal rendering needs to match that of the swapchain's images. The reason for this is explained later on in [command buffer submission](#submit-command-buffers). 
+There aren't a lot of options for creating these objects. Fences will be created in a signalled state by setting the `VK_FENCE_CREATE_SIGNALED_BIT` flag. Otherwise the first wait for such a fence would run into a timeout. We need one fence per [frame-in-flight](#cpu-and-gpu-parallelism) to sync between GPU and CPU. Same for the semaphore used to signal presentation. The no. of semaphores used to signal rendering needs to match that of the swapchain's images. The reason for this is explained later on in [command buffer submission](#submit-command-buffer). 
 
 !!! Tip
 
@@ -654,7 +654,7 @@ VkCommandPoolCreateInfo commandPoolCI{
 chk(vkCreateCommandPool(device, &commandPoolCI, nullptr, &commandPool));
 ```
 
-The [`VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT`](https://docs.vulkan.org/refpages/latest/refpages/source/VkCommandPoolCreateFlagBits.html) flag lets us implicitly reset command buffers when [recording them](#record-command-buffers). We also have to specify the queue family that the command buffers allocated from this pool will be submitted too.
+The [`VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT`](https://docs.vulkan.org/refpages/latest/refpages/source/VkCommandPoolCreateFlagBits.html) flag lets us implicitly reset command buffers when [recording them](#record-command-buffer). We also have to specify the queue family that the command buffers allocated from this pool will be submitted too.
 
 !!! Tip
 
@@ -756,7 +756,7 @@ vmaMapMemory(allocator, imgSrcAllocation, &imgSrcBufferPtr);
 memcpy(imgSrcBufferPtr, ktxTexture->pData, ktxTexture->dataSize);
 ```
 
-Next we need to copy the image data from that buffer to the optimal tiled image on the GPU. For that we have to create a command buffer. We'll get into the detail on how they work [later on](#record-command-buffers). We also create a fence that's used to wait for the command buffer to finish execution:
+Next we need to copy the image data from that buffer to the optimal tiled image on the GPU. For that we have to create a command buffer. We'll get into the detail on how they work [later on](#record-command-buffer). We also create a fence that's used to wait for the command buffer to finish execution:
 
 ```cpp
 VkFenceCreateInfo fenceOneTimeCI{
@@ -1069,7 +1069,7 @@ float4 main(VSOutput input) {
 
 It contains two shading stages and starts with defining structures that are used by the different stages. The `ShaderData` structure matches the layout of the shader data structure defined on the [CPU-side](#shader-data-buffers).
 
-First is the vertex shader, marked by the `[shader("vertex")]` attribute. It takes in vertices defined as per `VSInput`, matching the vertex layout from the [graphics pipeline](#graphics-pipeline). The vertex shader will be invoked for every vertex [drawn](#record-command-buffers). As we use buffer device address, we pass and access the UBO as a pointer. As we draw multiple instances of our 3D model and want to use different matrices for every instance, we use the built-in `SV_VulkanInstanceID` system value to index into the model matrices. We also want to highlight the selected model, so if the current instance matches that selection, we pass a different color factor to the fragment shader.
+First is the vertex shader, marked by the `[shader("vertex")]` attribute. It takes in vertices defined as per `VSInput`, matching the vertex layout from the [graphics pipeline](#graphics-pipeline). The vertex shader will be invoked for every vertex [drawn](#record-command-buffer). As we use buffer device address, we pass and access the UBO as a pointer. As we draw multiple instances of our 3D model and want to use different matrices for every instance, we use the built-in `SV_VulkanInstanceID` system value to index into the model matrices. We also want to highlight the selected model, so if the current instance matches that selection, we pass a different color factor to the fragment shader.
 
 Second is the fragment shader, marked by the `[shader("fragment")]` attribute. First we calculate some basic lighting using the [phong reflection model](https://en.wikipedia.org/wiki/Phong_reflection_model) with values passed from the vertex shader. Then, to demonstrate descriptor indexing, we read from the array of textures (`Sampler2D textures[]`) using the instance index, and finally combine that with the lighting calculation. This is written to the current color attachment.
 
@@ -1479,7 +1479,7 @@ We now [finish](https://docs.vulkan.org/refpages/latest/refpages/source/vkCmdEnd
 vkCmdEndRendering(cb);
 ```
 
-And transition the swapchain image that we just used as an attachment (to output color values) to a layout required for [presentation](#present-images):
+And transition the swapchain image that we just used as an attachment (to output color values) to a layout required for [presentation](#present-image):
 
 ```cpp
 VkImageMemoryBarrier2 barrierPresent{
