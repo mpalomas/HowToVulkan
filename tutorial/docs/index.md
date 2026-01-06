@@ -1291,8 +1291,11 @@ chk(vkWaitForFences(device, 1, &fences[frameIndex], true, UINT64_MAX));
 chk(vkResetFences(device, 1, &fences[frameIndex]));
 ```
 
-The call to [vkWaitForFences](https://docs.vulkan.org/refpages/latest/refpages/source/vkWaitForFences.html) will wait on the CPU until the GPU has signalled it has finished all work submitted with that fence. The max. timeout for this wait is set to `UINT64_MAX`. That might sound like much, but that's in nanoseconds, so actually quite a small period. As the fence is still in signaled state, we also need to [reset](https://docs.vulkan.org/refpages/latest/refpages/source/vkResetFences.html) for the next submission.
+The call to [vkWaitForFences](https://docs.vulkan.org/refpages/latest/refpages/source/vkWaitForFences.html) will wait on the CPU until the GPU has signalled it has finished all work submitted with that fence. We use a deliberately large timeout value of `UINT64_MAX`. As the fence is still in signaled state, we also need to [reset](https://docs.vulkan.org/refpages/latest/refpages/source/vkResetFences.html) for the next submission.
 
+!!! Note
+
+	We have no requirements regarding how long the graphics operations are allowed to take, so we essentially don’t care about a timeout. We don’t perform any particularly complex tasks, and the fence will usually be signaled within a few milliseconds. Also, most operating systems implement features to reset the GPU if a graphics task takes too long.
 
 ### Acquire next image
 
