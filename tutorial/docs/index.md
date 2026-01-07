@@ -415,7 +415,7 @@ With both the image and the image view created, our depth attachment is now read
 
 ## Loading meshes
 
-From Vulkan's perspective there is no technical difference between drawing a single triangle or a complex mesh with thousands of triangles. Both result in some sort of buffer that the GPU will read data from. The GPU does not care where that data comes from. But from a learning experience it's much better to load an actual 3D object instead of displaying a triangle from hardcoded vertex data. That's our next step.
+From Vulkan's perspective there is no technical difference between drawing a single triangle or a complex mesh with thousands of triangles. Both result in some sort of buffer that the GPU will read data from. The GPU does not care where that data comes from.  We could start by displaying a single triangle with hardcoded vertex data but for a learning experience it's much better to load an actual 3D object instead. That's our next step.
 
 There are plenty of formats around for storing 3D models. [glTF](https://www.khronos.org/Gltf) for example offers a lot of features and is extensible in a way similar to Vulkan. But we want to keep things simple, so we'll be using the [Wavefront .obj format](https://en.wikipedia.org/wiki/Wavefront_.obj_file) instead. As far as 3D formats go, it won't get more plain than this. And it's supported by many tools like [Blender](https://www.blender.org/).
 
@@ -493,7 +493,7 @@ VmaAllocationCreateInfo bufferAllocCI{
 chk(vmaCreateBuffer(allocator, &bufferCI, &bufferAllocCI, &vBuffer, &vBufferAllocation, nullptr));
 ```
 
-We again use `VMA_MEMORY_USAGE_AUTO` to have VMA select the correct usage flags for the buffer. The specific `flags` combination of `VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT` and `VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT` used here make sure we get a memory type that's located on the GPU (in VRAM) and accessible by the host. While it's possible to keep vertices and indices in CPU memory, accessing that by the GPU will be a lot slower. Such memory types initially were only available on systems with a unified memory architecture like mobiles or computers with an integrated GPU. But thanks to [(Re)BAR/SAM](https://en.wikipedia.org/wiki/PCI_configuration_space#Resizable_BAR) even dedicated GPUs can now map at least some of their VRAM into host space and make it accessible via the CPU.
+We again use `VMA_MEMORY_USAGE_AUTO` to have VMA select the correct usage flags for the buffer. The specific `flags` combination of `VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT` and `VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT` used here make sure we get a memory type that's located on the GPU (in VRAM) and accessible by the host. While it's possible to store vertices and indices in CPU memory, GPU access to them will be much slower. Early on, CPU accessible VRAM memory types were only available on systems with a unified memory architecture, like mobiles or integrated GPUs. But thanks to [(Re)BAR/SAM](https://en.wikipedia.org/wiki/PCI_configuration_space#Resizable_BAR) even dedicated GPUs can now map most of their VRAM into host address space and make it accessible via the CPU.
 
 !!! Note
 
@@ -608,10 +608,10 @@ Another area where Vulkan is very explicit is [synchronization](https://docs.vul
 We'll be using different means of synchronization during this tutorial:
 
 * [Fences](https://docs.vulkan.org/spec/latest/chapters/synchronization.html#synchronization-fences) are used to signal work completion from GPU to CPU. We use them when we need to make sure that a resource used by both GPU and CPU is free to be modified on the CPU.
-* [Semaphores](https://docs.vulkan.org/spec/latest/chapters/synchronization.html#synchronization-semaphores) are used to control access to resources on the GPU-side (only). We use them to ensure proper ordering for things like presentation.
+* [Binary Semaphores](https://docs.vulkan.org/spec/latest/chapters/synchronization.html#synchronization-semaphores) are used to control access to resources on the GPU-side (only). We use them to ensure proper ordering for things like presentation.
 * [Pipeline barriers](https://docs.vulkan.org/spec/latest/chapters/synchronization.html#synchronization-pipeline-barriers) are used to control resource access within a GPU queue. We use them for layout transitions of images.
 
-Fences and semaphores are objects that we have to create and store, barriers instead are issued as commands and will be discussed later:
+Fences and binary semaphores are objects that we have to create and store, barriers instead are issued as commands and will be discussed later:
 
 ```cpp
 VkSemaphoreCreateInfo semaphoreCI{
@@ -631,7 +631,7 @@ for (auto& semaphore : renderSemaphores) {
 }
 ```
 
-There aren't a lot of options for creating these objects. Fences will be created in a signalled state by setting the `VK_FENCE_CREATE_SIGNALED_BIT` flag. Otherwise the first wait for such a fence would run into a timeout. We need one fence per [frame-in-flight](#cpu-and-gpu-parallelism) to sync between GPU and CPU. Same for the semaphore used to signal presentation. The no. of semaphores used to signal rendering needs to match that of the swapchain's images. The reason for this is explained later on in [command buffer submission](#submit-command-buffer). 
+There aren't a lot of options for creating these objects. Fences will be created in a signalled state by setting the `VK_FENCE_CREATE_SIGNALED_BIT` flag. Otherwise the first wait for such a fence would run into a timeout. We need one fence per [frame-in-flight](#cpu-and-gpu-parallelism) to sync between GPU and CPU. Same for the semaphore used to signal presentation. The number of semaphores used to signal rendering needs to match that of the swapchain's images. The reason for this is explained later on in [command buffer submission](#submit-command-buffer). 
 
 !!! Tip
 
@@ -712,7 +712,7 @@ VmaAllocationCreateInfo texImageAllocCI{ .usage = VMA_MEMORY_USAGE_AUTO };
 chk(vmaCreateImage(allocator, &texImgCI, &texImageAllocCI, &textures[i].image, &textures[i].allocation, nullptr));
 ```
 
-The format is read from the texture using `ktxTexture_GetVkFormat`, width, height and the number of [mip levels](https://docs.vulkan.org/spec/latest/chapters/textures.html#textures-level-of-detail-operation) also come from that. Our desired `usage` combination means that we want to transfer data loaded from disk to this image (`VK_IMAGE_USAGE_TRANSFER_DST_BIT`) and (at a later point) want to sample from it in a shader (`VK_IMAGE_USAGE_SAMPLED_BIT`). We again use `VK_IMAGE_LAYOUT_UNDEFINED` for the initial layout, as that's the only one allowed in this case (`VK_IMAGE_LAYOUT_PREINITIALIZED` e.g. only works with linear tiled images). Once again `vmaCreateImage` is used to create the image, with `VMA_MEMORY_USAGE_AUTO` making sure we get the most fitting memory type (GPU VRAM).
+The format is read from the texture using `ktxTexture_GetVkFormat`, width, height and the number of [mip levels](https://docs.vulkan.org/spec/latest/chapters/textures.html#textures-level-of-detail-operation) also come from that. Our desired `usage` combination means that we want to transfer data loaded from disk to this image (`VK_IMAGE_USAGE_TRANSFER_DST_BIT`) and (at a later point) want to sample from it in a shader (`VK_IMAGE_USAGE_SAMPLED_BIT`). We again use VK_IMAGE_LAYOUT_UNDEFINED, as that's the only one allowed in this case (the only other allowed format is VK_IMAGE_LAYOUT_PREINITIALIZED but that only works with linear tiled images). Once again `vmaCreateImage` is used to create the image, with `VMA_MEMORY_USAGE_AUTO` making sure we get the most fitting memory type (GPU VRAM).
 
 We also create a view through which the image (texture) will be accessed. In our case we want to access the whole image, including all mip levels:
 
