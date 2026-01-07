@@ -783,14 +783,14 @@ VkCommandBufferBeginInfo cbOneTimeBI{
 vkBeginCommandBuffer(cbOneTime, &cbOneTimeBI);
 VkImageMemoryBarrier2 barrierTexImage{
 	.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
-	.srcStageMask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-	.srcAccessMask = 0,
-	.dstStageMask = VK_PIPELINE_STAGE_2_TRANSFER_BIT_KHR,
-	.dstAccessMask = VK_ACCESS_2_TRANSFER_WRITE_BIT_KHR,
+	.srcStageMask = VK_PIPELINE_STAGE_2_NONE,
+	.srcAccessMask = VK_ACCESS_2_NONE,
+	.dstStageMask = VK_PIPELINE_STAGE_2_TRANSFER_BIT,
+	.dstAccessMask = VK_ACCESS_2_TRANSFER_WRITE_BIT,
 	.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
 	.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 	.image = textures[i].image,
-	.subresourceRange = {.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, .levelCount = ktxTexture->numLevels, .layerCount = 1 }
+	.subresourceRange = { .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, .levelCount = ktxTexture->numLevels, .layerCount = 1 }
 };
 VkDependencyInfo barrierTexInfo{
 	.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
@@ -816,7 +816,7 @@ VkImageMemoryBarrier2 barrierTexRead{
 	.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
 	.dstAccessMask = VK_ACCESS_SHADER_READ_BIT,
 	.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-	.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+	.newLayout = VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL,
 	.image = textures[i].image,
 	.subresourceRange = {.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, .levelCount = ktxTexture->numLevels, .layerCount = 1 }
 };
@@ -825,7 +825,7 @@ vkCmdPipelineBarrier2(cbOneTime, &barrierTexInfo);
 vkEndCommandBuffer(cbOneTime);
 ```
 
-It might look a bit overwhelming at first but it's easily explained. Earlier on we learned about optimal tiled images, where texels are stored in a hardware-specific layout for optimal access by the GPU. That [layout](https://docs.vulkan.org/spec/latest/chapters/resources.html#resources-image-layouts) also defines what operations are possible with an image. That's why we need to change said layout depending on what we want to do next with our image. That's done via a pipeline barrier issued by [vkCmdPipelineBarrier2](https://docs.vulkan.org/refpages/latest/refpages/source/vkCmdPipelineBarrier2.html). The first one transitions all mip levels of the texture image from the initial undefined layout to a layout that allows us to transfer data to it (`VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL`). We then copy over all the mip levels from our temporary buffer to the image using [vkCmdCopyBufferToImage](https://docs.vulkan.org/refpages/latest/refpages/source/vkCmdCopyBufferToImage.html). Finally we transition the mip levels from transfer destination to a layout we can read from in our shader (`VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL`).
+It might look a bit overwhelming at first but it's easily explained. Earlier on we learned about optimal tiled images, where texels are stored in a hardware-specific layout for optimal access by the GPU. That [layout](https://docs.vulkan.org/spec/latest/chapters/resources.html#resources-image-layouts) also defines what operations are possible with an image. That's why we need to change said layout depending on what we want to do next with our image. That's done via a pipeline barrier issued by [vkCmdPipelineBarrier2](https://docs.vulkan.org/refpages/latest/refpages/source/vkCmdPipelineBarrier2.html). The first one transitions all mip levels of the texture image from the initial undefined layout to a layout that allows us to transfer data to it (`VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL`). We then copy over all the mip levels from our temporary buffer to the image using [vkCmdCopyBufferToImage](https://docs.vulkan.org/refpages/latest/refpages/source/vkCmdCopyBufferToImage.html). Finally we transition the mip levels from transfer destination to a layout we can read from in our shader (`VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL`).
 
 !!! Tip
 
