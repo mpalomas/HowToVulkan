@@ -15,7 +15,6 @@ endif()
 
 find_package(Vulkan REQUIRED)
 
-# VMA and Slang are taken from the SDK
 # These are not part of the SDK
 include_directories(external/tinyobj)
 include_directories(external/ktx/include)
@@ -27,18 +26,58 @@ FetchContent_Declare(SFML
     GIT_SHALLOW ON)
 FetchContent_MakeAvailable(SFML)
 
-FetchContent_Declare(volk
-    GIT_REPOSITORY https://github.com/zeux/volk
-    GIT_TAG 1.4.304
-    GIT_SHALLOW ON)
-set(VOLK_HEADERS_ONLY ON)
-FetchContent_MakeAvailable(volk)
+# VMA, Volk, and Slang may be installed with the Vulkan SDK, or not
 
-FetchContent_Declare(glm
-    GIT_REPOSITORY https://github.com/g-truc/glm.git
-    GIT_TAG 1.0.3
-    GIT_SHALLOW ON)
-FetchContent_MakeAvailable(glm)
+# Try to find Volk from the Vulkan SDK first
+find_library(Volk_LIBRARY NAMES volk HINTS "$ENV{VULKAN_SDK}/lib")
+find_path(Volk_INCLUDE_DIR NAMES volk.h HINTS "$ENV{VULKAN_SDK}/include")
+
+if(Volk_LIBRARY AND Volk_INCLUDE_DIR)
+    message(STATUS "Found Volk in Vulkan SDK: ${Volk_LIBRARY}")
+    add_library(volk::volk_headers INTERFACE IMPORTED)
+    target_include_directories(volk::volk_headers INTERFACE ${Volk_INCLUDE_DIR})
+    # Note: Since you use VOLK_HEADERS_ONLY, we only need includes
+else()
+    message(STATUS "Volk not found in Vulkan SDK, fetching from GitHub")
+    FetchContent_Declare(volk
+        GIT_REPOSITORY https://github.com/zeux/volk
+        GIT_TAG 1.4.304
+        GIT_SHALLOW ON)
+    set(VOLK_HEADERS_ONLY ON)
+    FetchContent_MakeAvailable(volk)
+endif()
+
+# Try to find GLM from the Vulkan SDK first
+find_path(GLM_INCLUDE_DIR NAMES glm/glm.hpp HINTS "$ENV{VULKAN_SDK}/include")
+
+if(GLM_INCLUDE_DIR)
+    message(STATUS "Found GLM in Vulkan SDK: ${GLM_INCLUDE_DIR}")
+    add_library(glm::glm INTERFACE IMPORTED)
+    target_include_directories(glm::glm INTERFACE ${GLM_INCLUDE_DIR})
+else()
+    message(STATUS "GLM not found in Vulkan SDK, fetching from GitHub")
+    FetchContent_Declare(glm
+        GIT_REPOSITORY https://github.com/g-truc/glm.git
+        GIT_TAG 1.0.3
+        GIT_SHALLOW ON)
+    FetchContent_MakeAvailable(glm)
+endif()
+
+# Try to find VMA (AMD Vulkan Memory Allocator) from the Vulkan SDK first
+find_path(VMA_INCLUDE_DIR NAMES vma/vk_mem_alloc.h HINTS "$ENV{VULKAN_SDK}/include")
+
+if(VMA_INCLUDE_DIR)
+    message(STATUS "Found VMA in Vulkan SDK: ${VMA_INCLUDE_DIR}")
+    add_library(vma INTERFACE IMPORTED)
+    target_include_directories(vma INTERFACE ${VMA_INCLUDE_DIR})
+else()
+    message(STATUS "VMA not found in Vulkan SDK, fetching from GitHub")
+    FetchContent_Declare(vma
+        GIT_REPOSITORY https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
+        GIT_TAG e722e57c891a8fbe3cc73ca56c19dd76be242759
+        GIT_SHALLOW OFF)
+    FetchContent_MakeAvailable(vma)
+endif()
 
 OPTION(USE_D2D_WSI "Build the project using Direct to Display swapchain" OFF)
 OPTION(USE_WAYLAND_WSI "Build the project using Wayland swapchain" OFF)
@@ -73,7 +112,7 @@ add_executable(${NAME} main.cpp assets/shader.slang)
 target_compile_definitions(${NAME} PRIVATE VK_NO_PROTOTYPES)
 set_target_properties(${NAME} PROPERTIES DEBUGGER_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_features(${NAME} PRIVATE cxx_std_20)
-target_link_libraries(${NAME} PRIVATE SFML::Graphics volk::volk_headers ktx glm::glm Vulkan::Headers ${Slang_LIBRARY})
+target_link_libraries(${NAME} PRIVATE SFML::Graphics volk::volk_headers ktx glm::glm vma Vulkan::Headers ${Slang_LIBRARY})
 
 # Copy assets to build directory
 add_custom_command(TARGET ${NAME} POST_BUILD
