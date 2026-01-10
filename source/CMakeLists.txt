@@ -13,8 +13,9 @@ else()
     message(STATUS "Found Vulkan SDK in $ENV{VULKAN_SDK}")
 endif()
 
-# Volk, VMA, glm and Slang are taken from the SDK
-include_directories($ENV{VULKAN_SDK}/include)
+find_package(Vulkan REQUIRED)
+
+# VMA and Slang are taken from the SDK
 # These are not part of the SDK
 include_directories(external/tinyobj)
 include_directories(external/ktx/include)
@@ -25,6 +26,19 @@ FetchContent_Declare(SFML
     GIT_TAG 3.0.1
     GIT_SHALLOW ON)
 FetchContent_MakeAvailable(SFML)
+
+FetchContent_Declare(volk
+    GIT_REPOSITORY https://github.com/zeux/volk
+    GIT_TAG 1.4.304
+    GIT_SHALLOW ON)
+set(VOLK_HEADERS_ONLY ON)
+FetchContent_MakeAvailable(volk)
+
+FetchContent_Declare(glm
+    GIT_REPOSITORY https://github.com/g-truc/glm.git
+    GIT_TAG 1.0.3
+    GIT_SHALLOW ON)
+FetchContent_MakeAvailable(glm)
 
 OPTION(USE_D2D_WSI "Build the project using Direct to Display swapchain" OFF)
 OPTION(USE_WAYLAND_WSI "Build the project using Wayland swapchain" OFF)
@@ -40,6 +54,7 @@ set(KTX_SOURCES
     ${KTX_DIR}/lib/vkloader.c)
 
 add_library(ktx STATIC ${KTX_SOURCES})
+target_link_libraries(ktx PRIVATE Vulkan::Headers)
 
 find_library(Slang_LIBRARY NAMES slang HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
 
@@ -55,7 +70,15 @@ endif()
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/")
 
 add_executable(${NAME} main.cpp assets/shader.slang)
-add_definitions(-D_CRT_SECURE_NO_WARNINGS -DVK_NO_PROTOTYPES)
+target_compile_definitions(${NAME} PRIVATE VK_NO_PROTOTYPES)
 set_target_properties(${NAME} PROPERTIES DEBUGGER_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_features(${NAME} PRIVATE cxx_std_20)
-target_link_libraries(${NAME} PRIVATE SFML::Graphics ktx ${Slang_LIBRARY})
+target_link_libraries(${NAME} PRIVATE SFML::Graphics volk::volk_headers ktx glm::glm Vulkan::Headers ${Slang_LIBRARY})
+
+# Copy assets to build directory
+add_custom_command(TARGET ${NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/assets
+    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/assets
+    COMMENT "Copying assets to build directory"
+)
