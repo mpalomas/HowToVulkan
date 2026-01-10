@@ -34,9 +34,9 @@ find_path(Volk_INCLUDE_DIR NAMES volk.h HINTS "$ENV{VULKAN_SDK}/include")
 
 if(Volk_LIBRARY AND Volk_INCLUDE_DIR)
     message(STATUS "Found Volk in Vulkan SDK: ${Volk_LIBRARY}")
+    # Note: Since we use VOLK_HEADERS_ONLY, we only need includes
     add_library(volk::volk_headers INTERFACE IMPORTED)
     target_include_directories(volk::volk_headers INTERFACE ${Volk_INCLUDE_DIR})
-    # Note: Since you use VOLK_HEADERS_ONLY, we only need includes
 else()
     message(STATUS "Volk not found in Vulkan SDK, fetching from GitHub")
     FetchContent_Declare(volk
