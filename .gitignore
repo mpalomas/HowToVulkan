@@ -17,6 +17,8 @@ bld/
 [Bb]in/
 [Oo]bj/
 
+.vscode
+
 # CMake
 CMakeCache.txt
 CMakeFiles
@@ -24,6 +26,9 @@ CMakeScripts
 Makefile
 cmake_install.cmake
 install_manifest.txt
+
+# clangd
+.cache
 
 # Roslyn cache directories
 *.ide/
