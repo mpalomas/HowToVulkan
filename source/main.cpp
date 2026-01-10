@@ -5,14 +5,14 @@
 #include <SFML/Graphics.hpp>
 #include <vulkan/vulkan.h>
 #define VOLK_IMPLEMENTATION
-#include <volk/volk.h>
+#include <volk.h>
 #include <vector>
 #include <array>
 #include <string>
 #include <iostream>
 #include <fstream>
 #define VMA_IMPLEMENTATION
-#include <vma/vk_mem_alloc.h>
+#include <vk_mem_alloc.h>
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>

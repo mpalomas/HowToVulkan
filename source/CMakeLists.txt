@@ -30,7 +30,7 @@ FetchContent_MakeAvailable(SFML)
 
 # Try to find Volk from the Vulkan SDK first
 find_library(Volk_LIBRARY NAMES volk HINTS "$ENV{VULKAN_SDK}/lib")
-find_path(Volk_INCLUDE_DIR NAMES volk.h HINTS "$ENV{VULKAN_SDK}/include")
+find_path(Volk_INCLUDE_DIR NAMES volk/volk.h HINTS "$ENV{VULKAN_SDK}/include")
 
 if(Volk_LIBRARY AND Volk_INCLUDE_DIR)
     message(STATUS "Found Volk in Vulkan SDK: ${Volk_LIBRARY}")
@@ -68,11 +68,11 @@ find_path(VMA_INCLUDE_DIR NAMES vma/vk_mem_alloc.h HINTS "$ENV{VULKAN_SDK}/inclu
 
 if(VMA_INCLUDE_DIR)
     message(STATUS "Found VMA in Vulkan SDK: ${VMA_INCLUDE_DIR}")
-    add_library(vma INTERFACE IMPORTED)
-    target_include_directories(vma INTERFACE ${VMA_INCLUDE_DIR})
+    add_library(vma  INTERFACE IMPORTED)
+    target_include_directories(vma INTERFACE ${VMA_INCLUDE_DIR} ${VMA_INCLUDE_DIR}/include)
 else()
     message(STATUS "VMA not found in Vulkan SDK, fetching from GitHub")
-    FetchContent_Declare(vma
+    FetchContent_Declare(vma 
         GIT_REPOSITORY https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
         GIT_TAG e722e57c891a8fbe3cc73ca56c19dd76be242759
         GIT_SHALLOW OFF)
@@ -112,7 +112,8 @@ add_executable(${NAME} main.cpp assets/shader.slang)
 target_compile_definitions(${NAME} PRIVATE VK_NO_PROTOTYPES)
 set_target_properties(${NAME} PROPERTIES DEBUGGER_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_features(${NAME} PRIVATE cxx_std_20)
-target_link_libraries(${NAME} PRIVATE SFML::Graphics volk::volk_headers ktx glm::glm vma Vulkan::Headers ${Slang_LIBRARY})
+target_include_directories(${NAME} PRIVATE ${vma_SOURCE_DIR}/include)
+target_link_libraries(${NAME} PRIVATE SFML::Graphics volk::volk_headers ktx glm::glm VulkanMemoryAllocator Vulkan::Headers ${Slang_LIBRARY})
 
 # Copy assets to build directory
 add_custom_command(TARGET ${NAME} POST_BUILD
