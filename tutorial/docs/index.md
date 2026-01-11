@@ -164,16 +164,31 @@ chk(vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data()));
 
 After the second call to [`vkEnumeratePhysicalDevices`](https://docs.vulkan.org/refpages/latest/refpages/source/vkEnumeratePhysicalDevices.html) we have a list of all available Vulkan capable devices.
 
-
 !!! Info
 
 	Having to call functions that return some sort of list twice is common in the Vulkan C-API. The first call will return the number of elements, which is then used to properly size the result list. The second call then fills the actual result list.
 
-Because most systems only have one device, we simply use the first physical device that supports Vulkan. In a real-world application you could let the user select different devices, e.g. via command line arguments or in an options screen:
+Because most systems only have one device, we just implement a simple and optional way of selecting devices by passing the desired device index as a command line argument:
 
 ```cpp
-const uint32_t deviceIndex{ 0 };
+uint32_t deviceIndex{ 0 };
+if (argc > 1) {
+	deviceIndex = std::stoi(argv[1]);
+	assert(deviceIndex < deviceCount);
+}
 ```
+
+We also want to display information of the selected device. For that we call [`vkGetPhysicalDeviceProperties2`](https://docs.vulkan.org/refpages/latest/refpages/source/vkGetPhysicalDeviceProperties2.html) and output the name of the device to the console:
+
+```cpp
+VkPhysicalDeviceProperties2 deviceProperties{ .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2 };
+vkGetPhysicalDeviceProperties2(devices[deviceIndex], &deviceProperties);
+std::cout << "Selected device: " << deviceProperties.properties.deviceName <<  "\n";
+```
+
+!!! Info
+
+	You might have noticed that `VkPhysicalDeviceProperties2` and `vkGetPhysicalDeviceProperties2` are suffixed with a `2`. This is done to [address](https://docs.vulkan.org/spec/latest/appendices/legacy.html) shortcomings from previous versions. Fixing the original functions and structures isn't an option, as that would break API compatibility.
 
 ## Queues
 

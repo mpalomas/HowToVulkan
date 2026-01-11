@@ -95,7 +95,7 @@ struct Vertex {
 	glm::vec2 uv;
 };
 
-int main()
+int main(int argc, char* argv[])
 {
 	volkInitialize();
 	// Instance
@@ -114,7 +114,14 @@ int main()
 	chk(vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr));
 	std::vector<VkPhysicalDevice> devices(deviceCount);
 	chk(vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data()));
-	const uint32_t deviceIndex{ 0 };
+	uint32_t deviceIndex{ 0 };
+	if (argc > 1) {
+		deviceIndex = std::stoi(argv[1]);
+		assert(deviceIndex < deviceCount);
+	}
+	VkPhysicalDeviceProperties2 deviceProperties{ .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2 };
+	vkGetPhysicalDeviceProperties2(devices[deviceIndex], &deviceProperties);
+	std::cout << "Selected device: " << deviceProperties.properties.deviceName << "\n";
 	// Find a queue family for graphics
 	uint32_t queueFamilyCount{ 0 };
 	vkGetPhysicalDeviceQueueFamilyProperties(devices[deviceIndex], &queueFamilyCount, nullptr);
