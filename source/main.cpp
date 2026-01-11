@@ -568,10 +568,10 @@ int main(int argc, char* argv[])
 				camPos.z += (float)mouseWheelScrolled->delta * 0.025f * (float)elapsed.asMilliseconds();
 			}
 			if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>()) {
-				if (keyPressed->code == sf::Keyboard::Key::Add) {
+				if (keyPressed->code == sf::Keyboard::Key::D) {
 					shaderData.selected = (shaderData.selected < 2) ? shaderData.selected + 1 : 0;
 				}
-				if (keyPressed->code == sf::Keyboard::Key::Subtract) {
+				if (keyPressed->code == sf::Keyboard::Key::A) {
 					shaderData.selected = (shaderData.selected > 0) ? shaderData.selected - 1 : 2;
 				}
 			}

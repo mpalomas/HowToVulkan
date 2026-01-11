@@ -26,58 +26,27 @@ FetchContent_Declare(SFML
     GIT_SHALLOW ON)
 FetchContent_MakeAvailable(SFML)
 
-# VMA, Volk, and Slang may be installed with the Vulkan SDK, or not
+# VMA, Volk
 
-# Try to find Volk from the Vulkan SDK first
-find_library(Volk_LIBRARY NAMES volk HINTS "$ENV{VULKAN_SDK}/lib")
-find_path(Volk_INCLUDE_DIR NAMES volk/volk.h HINTS "$ENV{VULKAN_SDK}/include")
+FetchContent_Declare(volk
+    GIT_REPOSITORY https://github.com/zeux/volk
+    GIT_TAG 1.4.304
+    GIT_SHALLOW ON)
+set(VOLK_HEADERS_ONLY ON)
+FetchContent_MakeAvailable(volk)
 
-if(Volk_LIBRARY AND Volk_INCLUDE_DIR)
-    message(STATUS "Found Volk in Vulkan SDK: ${Volk_LIBRARY}")
-    # Note: Since we use VOLK_HEADERS_ONLY, we only need includes
-    add_library(volk::volk_headers INTERFACE IMPORTED)
-    target_include_directories(volk::volk_headers INTERFACE ${Volk_INCLUDE_DIR})
-else()
-    message(STATUS "Volk not found in Vulkan SDK, fetching from GitHub")
-    FetchContent_Declare(volk
-        GIT_REPOSITORY https://github.com/zeux/volk
-        GIT_TAG 1.4.304
-        GIT_SHALLOW ON)
-    set(VOLK_HEADERS_ONLY ON)
-    FetchContent_MakeAvailable(volk)
-endif()
 
-# Try to find GLM from the Vulkan SDK first
-find_path(GLM_INCLUDE_DIR NAMES glm/glm.hpp HINTS "$ENV{VULKAN_SDK}/include")
-
-if(GLM_INCLUDE_DIR)
-    message(STATUS "Found GLM in Vulkan SDK: ${GLM_INCLUDE_DIR}")
-    add_library(glm::glm INTERFACE IMPORTED)
-    target_include_directories(glm::glm INTERFACE ${GLM_INCLUDE_DIR})
-else()
-    message(STATUS "GLM not found in Vulkan SDK, fetching from GitHub")
-    FetchContent_Declare(glm
-        GIT_REPOSITORY https://github.com/g-truc/glm.git
-        GIT_TAG 1.0.3
-        GIT_SHALLOW ON)
-    FetchContent_MakeAvailable(glm)
-endif()
-
-# Try to find VMA (AMD Vulkan Memory Allocator) from the Vulkan SDK first
-find_path(VMA_INCLUDE_DIR NAMES vma/vk_mem_alloc.h HINTS "$ENV{VULKAN_SDK}/include")
-
-if(VMA_INCLUDE_DIR)
-    message(STATUS "Found VMA in Vulkan SDK: ${VMA_INCLUDE_DIR}")
-    add_library(vma  INTERFACE IMPORTED)
-    target_include_directories(vma INTERFACE ${VMA_INCLUDE_DIR} ${VMA_INCLUDE_DIR}/include)
-else()
-    message(STATUS "VMA not found in Vulkan SDK, fetching from GitHub")
-    FetchContent_Declare(vma 
-        GIT_REPOSITORY https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
-        GIT_TAG e722e57c891a8fbe3cc73ca56c19dd76be242759
-        GIT_SHALLOW OFF)
-    FetchContent_MakeAvailable(vma)
-endif()
+FetchContent_Declare(glm
+    GIT_REPOSITORY https://github.com/g-truc/glm.git
+    GIT_TAG 1.0.3
+    GIT_SHALLOW ON)
+FetchContent_MakeAvailable(glm)
+    
+FetchContent_Declare(vma 
+    GIT_REPOSITORY https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
+    GIT_TAG e722e57c891a8fbe3cc73ca56c19dd76be242759
+    GIT_SHALLOW OFF)
+FetchContent_MakeAvailable(vma)
 
 OPTION(USE_D2D_WSI "Build the project using Direct to Display swapchain" OFF)
 OPTION(USE_WAYLAND_WSI "Build the project using Wayland swapchain" OFF)
